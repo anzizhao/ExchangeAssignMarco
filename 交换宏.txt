@@ -1,0 +1,168 @@
+
+'------------------------------------------------------------------------------
+'FILE DESCRIPTION: New Macro File
+'------------------------------------------------------------------------------
+
+Sub ExchangeAssign1()
+'DESCRIPTION: Looks through the active file, searching for the rest of the word that you began to type. 
+Dim doc
+set doc = ActiveDocument 
+
+' Be sure active document is a text document 
+if doc Is Nothing Then
+	 Exit Sub 
+elseif doc.Type <> "Text" Then 
+	Exit Sub 
+End If 
+
+' Get word to be completed
+Dim sel, curText, EqualPos, leftWord, rightWord, stripStart , searchString, PosTemp, curLine, curCol
+set sel = doc.Selection 
+doc.Selection.SelectLine 
+curText= LTrim(sel)
+
+'MsgBox(curText)
+EqualPos = Instr(curText, "=")
+If EqualPos = 0 Then
+	Exit Sub
+End If
+PosTemp = Instr(curText, " ")
+If PosTemp < EqualPos Then
+	leftWord = Left(curText, PosTemp-1)
+Else
+	leftWord = Left(curText, EqualPos-1 )
+End If
+'leftWord = Left(curText, EqualPos-1 )
+
+'去掉等号至单词的空白
+searchString = "="
+Do while sel.FindText(searchString, dsMatchRegExp)
+Exit Do ' Jump out of loop before repeat
+Loop
+searchString = "[a-zA-Z0-9].*"
+Do while sel.FindText(searchString, dsMatchRegExp)
+Exit Do ' Jump out of loop before repeat
+Loop
+curText = sel 
+'去掉分号
+stripStart = Instr(curText, ";")
+If stripStart = 0 Then
+	Exit Sub
+End If
+curText = Left(curText, stripStart-1) 
+
+rightWord = Right(curText, len(curText)) 
+'doc.Selection.MoveTo curLine,curCol
+
+doc.Selection.SelectLine 
+' 开始空白地方
+searchString = "[a-zA-Z0-9].*;"
+Do while sel.FindText(searchString, dsMatchRegExp)
+Exit Do ' Jump out of loop before repeat
+Loop
+
+doc.Selection = rightWord + " = " + leftWord + " ;" '+ vblf
+
+End Sub
+
+
+Function ExchangeAssignOneLine()
+	Dim doc
+	set doc = ActiveDocument 
+	Dim sel, curText, EqualPos, leftWord, rightWord, stripStart , searchString, PosTemp, curLine, curCol
+	set sel = doc.Selection 
+	doc.Selection.SelectLine 
+	curText= LTrim(sel)
+
+	'MsgBox(curText)
+	EqualPos = Instr(curText, "=")
+	If EqualPos = 0 Then
+		Exit Function
+	End If
+	PosTemp = Instr(curText, " ")
+	If PosTemp < EqualPos Then
+		leftWord = Left(curText, PosTemp-1)
+	Else
+		leftWord = Left(curText, EqualPos-1 )
+	End If
+'leftWord = Left(curText, EqualPos-1 )
+
+	'去掉等号至单词的空白
+	searchString = "="
+	Do while sel.FindText(searchString, dsMatchRegExp)
+		Exit Do ' Jump out of loop before repeat
+	Loop
+	searchString = "[a-zA-Z0-9].*"
+	Do while sel.FindText(searchString, dsMatchRegExp)
+		Exit Do ' Jump out of loop before repeat
+	Loop
+	curText = sel 
+	'去掉分号
+	stripStart = Instr(curText, ";")
+	If stripStart = 0 Then
+		Exit Function
+	End If
+	curText = Left(curText, stripStart-1) 
+	rightWord = Right(curText, len(curText)) 
+	'doc.Selection.MoveTo curLine,curCol
+	doc.Selection.SelectLine 
+	' 开始空白地方
+	searchString = "[a-zA-Z0-9].*;"
+	Do while sel.FindText(searchString, dsMatchRegExp)
+	Exit Do ' Jump out of loop before repeat
+	Loop
+	doc.Selection = rightWord + " = " + leftWord + " ;" '+ vblf
+End Function
+
+
+Sub ExchangeAssign()
+'DESCRIPTION: Looks through the active file, searching for the rest of the word that you began to type.
+	Dim doc
+	set doc = ActiveDocument
+	' Be sure active document is a text document
+	if doc Is Nothing Then
+		Exit Sub
+	elseif doc.Type <> "Text" Then
+		Exit Sub
+	End If
+	ExchangeAssignOneLine
+End Sub
+
+
+Sub ExchangeAssignSel()
+'DESCRIPTION: Looks through the active file, searching for the rest of the word that you began to type.
+	Dim doc
+	set doc = ActiveDocument
+
+	' Be sure active document is a text document
+	if doc Is Nothing Then
+		Exit Sub
+	elseif doc.Type <> "Text" Then
+		Exit Sub
+	End If
+
+	' Get word to be completed
+	Dim sel, curText, EqualPos, leftWord, rightWord, stripStart
+	set sel = doc.Selection
+	'循环读行
+	Dim StartLine, EndLine
+	StartLine = sel.TopLine
+	EndLine = sel.BottomLine
+	'如果是倒过来选择， 换过来
+	If EndLine < StartLine Then
+		Temp = StartLine
+		StartLine = EndLine
+		EndLine = Temp
+	End If
+
+	If EndLine = StartLine Then
+		ExchangeAssignOneLine
+	Else 
+		For i = StartLine To EndLine
+			sel.GoToLine i
+			sel.SelectLine
+			ExchangeAssignOneLine
+			sel.Cancel
+		Next
+	End If		
+End Sub
